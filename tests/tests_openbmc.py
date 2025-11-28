@@ -15,13 +15,13 @@ def driver():
     yield driver
     driver.quit()
 
-def test_find_openbmc_web(driver):
+def testing_find_openbmc(driver):
     driver.get("https://localhost:2443")
     time.sleep(2)
     assert any(word in driver.page_source.lower() 
-               for word in ['openbmc', 'username', 'password']), "OpenBMC не найден"
+               for word in ['openbmc', 'username', 'password']), "OpenBMC не был обнаружен"
 
-def test_successful_login(driver):
+def testing_login(driver):
     driver.get("https://localhost:2443")
     time.sleep(1)
     driver.find_element(By.ID, "username").send_keys("root")
@@ -29,9 +29,9 @@ def test_successful_login(driver):
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
     time.sleep(2)
 
-    assert "login" not in driver.current_url, "Авторизация не удалась"
+    assert "login" not in driver.current_url, "Ошибка Авторизации"
 
-def test_wrong_data(driver):
+def testing_uncorrect_data(driver):
     driver.get("https://localhost:2443")
     time.sleep(1)
     driver.find_element(By.ID, "username").send_keys("null")
@@ -39,9 +39,9 @@ def test_wrong_data(driver):
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
     time.sleep(3)
 
-    assert "login" in driver.current_url, "ошибка теста неверного пользователя"
+    assert "login" in driver.current_url, "Неправильно. Попробуй ещё раз"
 
-def test_account_block(driver):
+def testing_block_user(driver):
     for i in range(3):
         driver.get("https://localhost:2443")
         driver.find_element(By.ID, "username").send_keys("testuser")
@@ -51,15 +51,15 @@ def test_account_block(driver):
         assert "login" in driver.current_url
 
     driver.get("https://localhost:2443")
-    driver.find_element(By.ID, "username").send_keys("testuser")
-    driver.find_element(By.ID, "password").send_keys("TestPass123")
+    driver.find_element(By.ID, "username").send_keys("kolyan")
+    driver.find_element(By.ID, "password").send_keys("CHAOS_CHAOS_CHAOS")
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
     time.sleep(2)
     
     assert "login" in driver.current_url, "Аккаунт не заблокирован!"
 
 
-def test_temperature_redfish(driver):
+def temperature_redfish(driver):
     driver.get("https://localhost:2443/redfish/v1/Chassis/chassis/Thermal")
     time.sleep(2)
     
@@ -74,7 +74,7 @@ def test_temperature_redfish(driver):
     page_text = driver.page_source.lower()
     assert "thermal" in page_text or "temperature" in page_text, "Thermal endpoint не доступен"
 
-def test_power_control(driver):
+def power_control(driver):
     driver.get("https://localhost:2443")
     driver.find_element(By.ID, "username").send_keys("root")
     driver.find_element(By.ID, "password").send_keys("0penBmc") 

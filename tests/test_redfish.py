@@ -18,7 +18,6 @@ requests.packages.urllib3.disable_warnings()
 @pytest.fixture
 def session():
     session = requests.Session()
-    # session.auth = HTTPBasicAuth(USERNAME, PASSWORD)
     session.verify = False
 
     response = session.post(
@@ -29,9 +28,7 @@ def session():
     session.headers["X-Auth-Token"] = response.headers["X-Auth-Token"]
     yield session
 
-    # return session
-
-def test_redfish_authentication(session):
+def redfish_authentication(session):
     logger.info("Тест аутентификации Redfish")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/SessionService")
@@ -45,14 +42,14 @@ def test_redfish_authentication(session):
         session_data = response.json()
         assert "Id" in session_data
         assert session_data["UserName"] == USERNAME
-        logger.info("Аутентификация успешна")
+        logger.info("Аутентификация прошла успешно")
         
     except Exception as e:
         logger.error(f"Ошибка аутентификации: {e}")
         raise
 
-def test_system_info(session):
-    logger.info("Тест информации о системе")
+def system_info(session):
+    logger.info("Вывод информации о системе")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
         assert response.status_code == 200
@@ -60,13 +57,13 @@ def test_system_info(session):
         system_info = response.json()
         assert "PowerState" in system_info
         assert "Status" in system_info
-        logger.info(f"Состояние питания: {system_info.get('PowerState')}")
+        logger.info(f"Информация о состояние питания: {system_info.get('PowerState')}")
         
     except Exception as e:
-        logger.error(f"Ошибка получения информации о системе: {e}")
+        logger.error(f"Ошибка: {e}")
         raise
 
-def test_power_control(session):
+def power_control(session):
     logger.info("Тест управления питанием")
     try:
         power_url = f"{BASE_URL}/redfish/v1/Systems/system/Actions/ComputerSystem.Reset"
@@ -74,20 +71,20 @@ def test_power_control(session):
         
         response = session.post(power_url, json=power_data)
         assert response.status_code in [200, 202, 204]
-        logger.info(f"Команда питания отправлена, статус: {response.status_code}")
+        logger.info(f"Статус: {response.status_code}")
 
         time.sleep(5)
         response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
         power_state = response.json().get("PowerState")
         
         assert power_state in ["On", "Off", "PoweringOn", "PoweringOff"]
-        logger.info(f"Текущее состояние питания: {power_state}")
+        logger.info(f"Состояние питания: {power_state}")
         
     except Exception as e:
-        logger.error(f"Ошибка управления питанием: {e}")
+        logger.error(f"Ошибка: {e}")
         raise
 
-def test_thermal_subsystem_structure(session):
+def thermal_subsystem_structure(session):
     logger.info("Тест thermal subsystem")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Chassis/chassis/ThermalSubsystem")
@@ -106,10 +103,10 @@ def test_thermal_subsystem_structure(session):
         logger.info(f"Thermal subsystem: fans={has_fans}, temps={has_temps}")
         
     except Exception as e:
-        logger.error(f"Ошибка thermal subsystem: {e}")
+        logger.error(f"Ошибка: {e}")
         raise
 
-def test_processors_summary(session):
+def processors_summary(session):
     logger.info("Тест информации о процессорах")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
@@ -135,7 +132,7 @@ def test_processors_summary(session):
         logger.info(f"Processors Members count: {processors_count}")
         
     except Exception as e:
-        logger.error(f"Ошибка processors summary: {e}")
+        logger.error(f"Ошибка: {e}")
         raise
 if __name__ == "__main__":
     logger.info("Запуск тестов Redfish API")

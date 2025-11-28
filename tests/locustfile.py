@@ -18,7 +18,7 @@ class OpenBMCUser(HttpUser):
                 print(f"Ошибка аутентификации: {auth_response.status_code}")
 
     @task(3)
-    def get_system_info(self):
+    def viewing_system_info(self):
         with self.client.get(
                 "/redfish/v1/Systems/system",
                 verify=False,
@@ -30,12 +30,12 @@ class OpenBMCUser(HttpUser):
                     if "Id" in system_data and "Status" in system_data:
                         response.success()
                     else:
-                        response.failure("Неполные данные системы")
+                        response.failure("Ошибка")
             else:
                 response.failure(f"HTTP {response.status_code}")
 
     @task(2)
-    def get_power_state(self):
+    def power_state(self):
         with self.client.get(
                 "/redfish/v1/Chassis/chassis",
                 verify=False,
@@ -47,26 +47,7 @@ class OpenBMCUser(HttpUser):
                     if "PowerState" in chassis_data:
                         response.success()
                     else:
-                        response.failure("Нет PowerState в ответе")
+                        response.failure("Ошибка")
             else:
                 response.failure(f"HTTP {response.status_code}")
 
-# class JSONPlaceholderUser(HttpUser):
-#     host = "https://jsonplaceholder.typicode.com"
-#     wait_time = between(1, 3)
-
-#     @task(4)
-#     def get_posts(self):
-#         with self.client.get(
-#                 "/posts",
-#                 catch_response=True,
-#                 name="Get All Posts"
-#         ) as response:
-#             if response.status_code == 200:
-#                     posts = response.json()
-#                     if len(posts) > 10: 
-#                         response.success()
-#                     else:
-#                         response.failure("Недостаточно постов")
-#             else:
-#                 response.failure(f"HTTP {response.status_code}")

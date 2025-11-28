@@ -13,29 +13,26 @@ pipeline {
         stage('Подготовка окружения') {
             steps {
                 script {
-                    echo "=== Подготовка окружения ==="
+                    echo "//// Подготовка окружения ////"
                     
                     sh '''
-                        # Создаем единую папку для всех артефактов
                         mkdir -p ${WORKSPACE}/artifacts
                     '''
                     
-                    echo "Окружение подготовлено"
+                    echo "Ваше окружение готово! "
                 }
             }
         }
 
-        stage('Запуск QEMU с OpenBMC') {
+        stage('Запуск QEMU с 0penBMC') {
             steps {
                 script {
-                    echo "=== Запуск QEMU с OpenBMC ==="
+                    echo "//// Запуск QEMU с 0penBMC ////"
                     
                     sh '''
                         pkill qemu-system-arm || true
                         rm -f /tmp/qemu.pid
                         sleep 2
-                        
-
                         
                         if [ ! -f "obmc-phosphor-image-romulus-20250902012112.static.mtd" ]; then
                             echo "ОШИБКА: MTD файл не найден!"
@@ -44,7 +41,7 @@ pipeline {
                         
                         echo "MTD файл найден: obmc-phosphor-image-romulus-20250902012112.static.mtd"
                         
-                        echo "Запуск QEMU..."
+                        echo "Начало запуска QEMU..."
                         nohup qemu-system-arm \
                             -M romulus-bmc \
                             -nographic \
@@ -64,7 +61,7 @@ pipeline {
                             exit 1
                         fi
                         
-                        echo "Быстрая проверка OpenBMC (максимум 30 секунд)..."
+                        echo "Быстрая проверка OpenBMC..."
                         timeout=30
                         elapsed=0
                         interval=3
@@ -95,7 +92,7 @@ pipeline {
         stage('Web UI Тесты') {
             steps {
                 script {
-                    echo "=== Запуск Web UI тестов ==="
+                    echo "//// Запуск Web UI тестов ////"
                     
                     sh '''
                         cd ${WORKSPACE}/tests
@@ -113,7 +110,6 @@ pipeline {
             post {
                 always {
                     sh '''
-                        # Копируем скриншоты если есть
                         if ls ${WORKSPACE}/tests/*.png 1> /dev/null 2>&1; then
                             cp ${WORKSPACE}/tests/*.png ${WORKSPACE}/artifacts/ || true
                         fi
@@ -125,12 +121,12 @@ pipeline {
         stage('Redfish API Тесты') {
             steps {
                 script {
-                    echo "=== Запуск Redfish API тестов ==="
+                    echo "//// Запуск Redfish  тестов ////"
                     
                     sh '''
                         cd ${WORKSPACE}/tests
                         
-                        echo "Запуск Redfish API тестов..."
+                        echo "Запуск Redfish тестов..."
                         
                         pip3 install -r ${WORKSPACE}/requirements.txt --break-system-packages || true
                         
@@ -147,7 +143,7 @@ pipeline {
         stage('Нагрузочное тестирование') {
             steps {
                 script {
-                    echo "=== Запуск нагрузочного тестирования ==="
+                    echo "//// Нагрузочное тестирования ////"
                     
                     sh '''
                         cd ${WORKSPACE}/tests
@@ -156,7 +152,6 @@ pipeline {
                         
                         pip3 install -r ${WORKSPACE}/requirements.txt --break-system-packages || true
                         
-                        # Используем || true чтобы игнорировать ошибки Locust
                         locust -f locustfile.py \
                             --host=https://localhost:2443 \
                             --users=5 \
@@ -173,14 +168,14 @@ pipeline {
         stage('Сборка артефактов') {
             steps {
                 script {
-                    echo "=== Сборка артефактов ==="
+                    echo "//// Начало сборки артефактов ////"
             
                 sh '''
                     cat > ${WORKSPACE}/artifacts/test_summary.md << 'EOF'
 # Отчет по тестированию OpenBMC
 
 ## Общая информация
-- Сборка завершена успешно
+- Сборка прошла успешно
 
 ## Результаты тестов
 
@@ -204,7 +199,7 @@ pipeline {
 EOF
             '''
             
-                    echo "Артефакты собраны"
+                    echo "Артефакты собраны успешно"
                 }
             }
         }
@@ -213,7 +208,7 @@ EOF
     post {
         always {
             script {
-                echo "=== Остановка QEMU ==="
+                echo "//// Остановка QEMU ////"
                 sh '''
                     if [ -f /tmp/qemu.pid ]; then
                         kill $(cat /tmp/qemu.pid) || true
@@ -223,7 +218,6 @@ EOF
                 '''
             }
             
-            // Публикация HTML отчета
             publishHTML([
                 allowMissing: false,
                 alwaysLinkToLastBuild: true,
@@ -233,19 +227,17 @@ EOF
                 reportName: 'OpenBMC Test Report'
             ])
             
-            // Публикация JUnit результатов
             junit testResults: 'artifacts/*.xml', allowEmptyResults: true
             
-            // Архивирование всех артефактов
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
         }
         
         success {
-            echo "=== Pipeline выполнен успешно ==="
+            echo "//// Pipeline выполнен успешно ////"
         }
         
         failure {
-            echo "=== Pipeline завершился с ошибкой ==="
+            echo "//// Pipeline завершился с ошибкой ////"
         }
     }
 }
