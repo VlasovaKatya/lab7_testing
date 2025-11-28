@@ -1,6 +1,6 @@
 pipeline {
     agent any
-      environment {
+    environment {
         BMC_URL = 'https://localhost:2443'
         BMC_USERNAME = 'root'
         BMC_PASSWORD = '0penBmc'
@@ -59,7 +59,7 @@ pipeline {
                 sh '''
                     cd ${WORKSPACE}/tests
                     pip3 install -r ${WORKSPACE}/requirements.txt --break-system-packages || true
-                    pytest 1.py\ 
+                    pytest 1.py \
                         --html=artifacts/api_report.html \
                         --self-contained-html \
                         --junitxml=artifacts/api.xml -v
@@ -76,12 +76,12 @@ pipeline {
                     pytest main.py \
                         --html=${WORKSPACE}/artifacts/web_ui_report.html \
                         --self-contained-html \
-                        --junitxml=${WORKSPACE}/artifacts/web_ui_junit.xml \ -v
+                        --junitxml=${WORKSPACE}/artifacts/web_ui_junit.xml -v
                 '''
             }
             post {
                 always {
-                    'cp ${WORKSPACE}/tests/*.png ${WORKSPACE}/artifacts/ || true'
+                    sh 'cp ${WORKSPACE}/tests/*.png ${WORKSPACE}/artifacts/ || true'
                 }
             }
         }
@@ -123,13 +123,12 @@ pipeline {
 
             junit 'artifacts/*.xml', allowEmptyResults: true
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
-        
         }
         success {
             echo "=== Pipeline выполнен успешно ==="
         }
-        
         failure {
             echo "=== Pipeline завершился с ошибкой ==="
+        }
     }
 }
