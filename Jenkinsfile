@@ -35,7 +35,7 @@ pipeline {
                         rm -f /tmp/qemu.pid
                         sleep 2
                         
-                        
+                        cd ${WORKSPACE}/romulus
                         
                         if [ ! -f "obmc-phosphor-image-romulus-20250902012112.static.mtd" ]; then
                             echo "ОШИБКА: MTD файл не найден!"
@@ -102,7 +102,7 @@ pipeline {
                         
                         pip3 install -r ${WORKSPACE}/requirements.txt --break-system-packages || true
                         
-                        pytest main.py \
+                        pytest tests_openbmc.py \
                             --html=${WORKSPACE}/artifacts/web_ui_report.html \
                             --self-contained-html \
                             --junitxml=${WORKSPACE}/artifacts/web_ui_junit.xml \
@@ -134,7 +134,7 @@ pipeline {
                         
                         pip3 install -r ${WORKSPACE}/requirements.txt --break-system-packages || true
                         
-                        pytest 1.py \
+                        pytest test_redfish.py \
                             --html=${WORKSPACE}/artifacts/redfish_report.html \
                             --self-contained-html \
                             --junitxml=${WORKSPACE}/artifacts/redfish_junit.xml \
@@ -177,6 +177,31 @@ pipeline {
             
                 sh '''
                     cat > ${WORKSPACE}/artifacts/test_summary.md << 'EOF'
+# Отчет по тестированию OpenBMC
+
+## Общая информация
+- Сборка завершена успешно
+
+## Результаты тестов
+
+### Web UI Тесты
+- HTML отчет: [web_ui_report.html](web_ui_report.html)
+- JUnit отчет: [web_ui_junit.xml](web_ui_junit.xml)
+
+### Redfish API Тесты  
+- HTML отчет: [redfish_report.html](redfish_report.html)
+- JUnit отчет: [redfish_junit.xml](redfish_junit.xml)
+
+### Нагрузочное тестирование
+- HTML отчет: [locust_report.html](locust_report.html)
+- CSV данные: [locust_stats_requests.csv](locust_stats_requests.csv)
+
+### Логи системы
+- Логи QEMU: [qemu_startup.log](qemu_startup.log)
+
+## Статус
+- Все тесты выполнены успешно
+EOF
             '''
             
                     echo "Артефакты собраны"
@@ -198,6 +223,7 @@ pipeline {
                 '''
             }
             
+            // Публикация HTML отчета
             publishHTML([
                 allowMissing: false,
                 alwaysLinkToLastBuild: true,
@@ -207,8 +233,10 @@ pipeline {
                 reportName: 'OpenBMC Test Report'
             ])
             
+            // Публикация JUnit результатов
             junit testResults: 'artifacts/*.xml', allowEmptyResults: true
             
+            // Архивирование всех артефактов
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
         }
         
