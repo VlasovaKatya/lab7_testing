@@ -121,7 +121,7 @@ pipeline {
                 reportName: 'OpenBMC Test Report'
             ])
 
-            junit 'artifacts/*.xml', allowEmptyResults: true
+           junit(testResults: 'artifacts/*.xml', allowEmptyResults: true)
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
         }
         success {
