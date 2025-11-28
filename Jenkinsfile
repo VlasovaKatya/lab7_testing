@@ -35,7 +35,7 @@ pipeline {
                         rm -f /tmp/qemu.pid
                         sleep 2
                         
-                        cd ${WORKSPACE}/romulus
+
                         
                         if [ ! -f "obmc-phosphor-image-romulus-20250902012112.static.mtd" ]; then
                             echo "ОШИБКА: MTD файл не найден!"
