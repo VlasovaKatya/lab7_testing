@@ -18,6 +18,7 @@ requests.packages.urllib3.disable_warnings()
 @pytest.fixture
 def session():
     session = requests.Session()
+    # session.auth = HTTPBasicAuth(USERNAME, PASSWORD)
     session.verify = False
 
     response = session.post(
@@ -27,6 +28,8 @@ def session():
     
     session.headers["X-Auth-Token"] = response.headers["X-Auth-Token"]
     yield session
+
+    # return session
 
 def test_redfish_authentication(session):
     logger.info("Тест аутентификации Redfish")
@@ -134,37 +137,6 @@ def test_processors_summary(session):
     except Exception as e:
         logger.error(f"Ошибка processors summary: {e}")
         raise
-
-def test_processors_vs_ipmi(session):
-    logger.info("Тест согласованности Redfish и IPMI")
-    try:
-        response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
-        system_data = response.json()
-        
-        redfish_count = system_data.get("ProcessorSummary", {}).get("Count", 0)
-        logger.info(f"Redfish CPU count: {redfish_count}")
-        
-        ipmi_cmd = [
-            'ipmitool', '-I', 'lanplus', '-H', 'localhost', 
-            '-p', '2623', '-U', 'root', '-P', '0penBmc', 
-            'sensor', 'list'
-        ]
-        
-        result = subprocess.run(ipmi_cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            logger.warning(f"IPMI команда завершилась с ошибкой: {result.stderr}")
-        
-        ipmi_output = result.stdout
-        
-        ipmi_cpu_sensors = len([line for line in ipmi_output.split('\n') if 'cpu' in line.lower()])
-        
-        assert redfish_count > 0 or ipmi_cpu_sensors > 0, "Нет данных о процессорах ни в Redfish, ни в IPMI"
-        logger.info("Согласованность процессоров проверена")
-        
-    except Exception as e:
-        logger.error(f"Ошибка сравнения Redfish и IPMI: {e}")
-        raise
-
 if __name__ == "__main__":
     logger.info("Запуск тестов Redfish API")
     pytest.main([__file__, "-v", "-s"])

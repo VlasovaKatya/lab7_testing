@@ -1,0 +1,57 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    privileged: true
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+      - "2443:2443" 
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./romulus:/var/jenkins_home/workspace/romulus
+      - ./tests:/var/jenkins_home/workspace/tests
+      - ./artifacts:/var/jenkins_home/workspace/artifacts
+      - ./jenkins_ssh:/var/jenkins_home/.ssh
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=no
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y python3 python3-pip python3-venv python3-full curl wget git openssh-client qemu-system-arm qemu-utils &&
+        apt-get install -y chromium xvfb chromium-driver &&
+        apt-get install -y build-essential libssl-dev libffi-dev python3-dev &&
+        
+        ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver &&
+        
+        pip3 install selenium pytest requests urllib3 locust --break-system-packages &&
+        pip3 install webdriver-manager pytest-html pytest-xvfb --break-system-packages &&
+        
+        echo '#!/bin/bash' > /usr/local/bin/chrome-wrapper &&
+        echo 'exec /usr/bin/chromium --no-sandbox --disable-dev-shm-usage --disable-gpu --headless --remote-debugging-port=9222 \"$$@\"' >> /usr/local/bin/chrome-wrapper &&
+        chmod +x /usr/local/bin/chrome-wrapper &&
+        
+        mkdir -p /var/jenkins_home/.ssh &&
+        chmod 700 /var/jenkins_home/.ssh &&
+        
+        chmod +x /usr/bin/qemu-system-arm &&
+        
+        mkdir -p /var/jenkins_home/plugins &&
+        
+        mkdir -p /var/jenkins_home/workspace/artifacts &&
+        
+        /usr/local/bin/jenkins.sh
+      "
+
+  dind:
+    image: docker:dind
+    container_name: dind
+    privileged: true
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+
+volumes:
+  jenkins_home:
