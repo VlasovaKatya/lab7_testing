@@ -15,13 +15,13 @@ def driver():
     yield driver
     driver.quit()
 
-def testing_find_openbmc(driver):
+def test_find_openbmc(driver):
     driver.get("https://localhost:2443")
     time.sleep(2)
     assert any(word in driver.page_source.lower() 
                for word in ['openbmc', 'username', 'password']), "OpenBMC не был обнаружен"
 
-def testing_login(driver):
+def test_login(driver):
     driver.get("https://localhost:2443")
     time.sleep(1)
     driver.find_element(By.ID, "username").send_keys("root")
@@ -31,7 +31,7 @@ def testing_login(driver):
 
     assert "login" not in driver.current_url, "Ошибка Авторизации"
 
-def testing_uncorrect_data(driver):
+def test_uncorrect_data(driver):
     driver.get("https://localhost:2443")
     time.sleep(1)
     driver.find_element(By.ID, "username").send_keys("null")
@@ -41,7 +41,7 @@ def testing_uncorrect_data(driver):
 
     assert "login" in driver.current_url, "Неправильно. Попробуй ещё раз"
 
-def testing_block_user(driver):
+def test_block_user(driver):
     for i in range(3):
         driver.get("https://localhost:2443")
         driver.find_element(By.ID, "username").send_keys("testuser")
@@ -59,7 +59,7 @@ def testing_block_user(driver):
     assert "login" in driver.current_url, "Аккаунт не заблокирован!"
 
 
-def temperature_redfish(driver):
+def test_temperature_redfish(driver):
     driver.get("https://localhost:2443/redfish/v1/Chassis/chassis/Thermal")
     time.sleep(2)
     
@@ -74,7 +74,7 @@ def temperature_redfish(driver):
     page_text = driver.page_source.lower()
     assert "thermal" in page_text or "temperature" in page_text, "Thermal endpoint не доступен"
 
-def power_control(driver):
+def test_power_control(driver):
     driver.get("https://localhost:2443")
     driver.find_element(By.ID, "username").send_keys("root")
     driver.find_element(By.ID, "password").send_keys("0penBmc") 

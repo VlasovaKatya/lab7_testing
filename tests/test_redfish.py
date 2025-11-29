@@ -28,7 +28,7 @@ def session():
     session.headers["X-Auth-Token"] = response.headers["X-Auth-Token"]
     yield session
 
-def redfish_authentication(session):
+def test_redfish_authentication(session):
     logger.info("Тест аутентификации Redfish")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/SessionService")
@@ -48,7 +48,7 @@ def redfish_authentication(session):
         logger.error(f"Ошибка аутентификации: {e}")
         raise
 
-def system_info(session):
+def test_system_info(session):
     logger.info("Вывод информации о системе")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
@@ -63,7 +63,7 @@ def system_info(session):
         logger.error(f"Ошибка: {e}")
         raise
 
-def power_control(session):
+def test_power_control(session):
     logger.info("Тест управления питанием")
     try:
         power_url = f"{BASE_URL}/redfish/v1/Systems/system/Actions/ComputerSystem.Reset"
@@ -84,7 +84,7 @@ def power_control(session):
         logger.error(f"Ошибка: {e}")
         raise
 
-def thermal_subsystem_structure(session):
+def test_thermal_subsystem_structure(session):
     logger.info("Тест thermal subsystem")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Chassis/chassis/ThermalSubsystem")
@@ -106,7 +106,7 @@ def thermal_subsystem_structure(session):
         logger.error(f"Ошибка: {e}")
         raise
 
-def processors_summary(session):
+def test_processors_summary(session):
     logger.info("Тест информации о процессорах")
     try:
         response = session.get(f"{BASE_URL}/redfish/v1/Systems/system")
